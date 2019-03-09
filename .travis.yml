@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+language: generic
+
+before_install:
+  - docker build -t shitanshu/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run shitanshu/react-test yarn test -- --coverage
+
+after_success:
+  - docker build -t shitanshu/multi-client ./client
+  - docker build -t shitanshu/multi-nginx ./nginx
+  - docker build -t shitanshu/multi-server ./server
+  - docker build -t shitanshu/multi-worker ./worker
+  # Login to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push shitanshu/multi-client
+  - docker push shitanshu/multi-nginx
+  - docker push shitanshu/multi-server
+  - docker push shitanshu/multi-worker
